@@ -159,43 +159,43 @@ namespace csharpgui
         }
 
         private void btnSend_Click(object sender, EventArgs e)
-{
-    // Kiểm tra tin nhắn rỗng
-    if (string.IsNullOrWhiteSpace(txtMessage.Text)) return;
+        {
+            // Kiểm tra tin nhắn rỗng
+            if (string.IsNullOrWhiteSpace(txtMessage.Text)) return;
 
-    // 1. Kiểm tra xem đã kết nối chưa
-    if (client == null || !client.Connected || STW == null)
-    {
-        MessageBox.Show("Chưa kết nối! Vui lòng kết nối trước khi gửi tin.", 
-                        "Lỗi gửi tin", 
-                        MessageBoxButtons.OK, 
-                        MessageBoxIcon.Error);
-        return;
-    }
+            // 1. Kiểm tra xem đã kết nối chưa
+            if (client == null || !client.Connected || STW == null)
+            {
+                MessageBox.Show("Chưa kết nối! Vui lòng kết nối trước khi gửi tin.",
+                                "Lỗi gửi tin",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                return;
+            }
 
-    try
-    {
-        textToSend = txtMessage.Text;
+            try
+            {
+                textToSend = txtMessage.Text;
 
-        // 2. Cố gắng gửi dữ liệu qua mạng
-        STW.WriteLine(textToSend);
-        
-        // 3. Chỉ cập nhật giao diện nến gửi thành công
-        string who = isServer ? "[Server]" : "[Client]";
-        rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textToSend + "\n");
-        
-        // Xóa ô nhập liệu
-        txtMessage.Clear();
-    }
-    catch (Exception ex)
-    {
-        // 4. Báo lỗi nếu có vấn đề trong quá trình truyền tin (ngắt kết nối đột ngột)
-        MessageBox.Show("Không thể gửi tin nhắn. Lỗi: " + ex.Message, 
-                        "Lỗi kết nối", 
-                        MessageBoxButtons.OK, 
-                        MessageBoxIcon.Error);
-    }
-}
+                // 2. Cố gắng gửi dữ liệu qua mạng
+                STW.WriteLine(textToSend);
+
+                // 3. Chỉ cập nhật giao diện nến gửi thành công
+                string who = isServer ? "[Server]" : "[Client]";
+                rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textToSend + "\n");
+
+                // Xóa ô nhập liệu
+                txtMessage.Clear();
+            }
+            catch (Exception ex)
+            {
+                // 4. Báo lỗi nếu có vấn đề trong quá trình truyền tin (ngắt kết nối đột ngột)
+                MessageBox.Show("Không thể gửi tin nhắn. Lỗi: " + ex.Message,
+                                "Lỗi kết nối",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+            }
+        }
 
         private void ReceiveMessages()
         {
@@ -308,6 +308,16 @@ namespace csharpgui
         }
 
         private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
         {
 
         }

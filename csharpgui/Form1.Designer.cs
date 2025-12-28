@@ -17,6 +17,7 @@
 
         private void InitializeComponent()
         {
+            PictureBox MyImage1;
             lblTitle = new Label();
             tabControl1 = new TabControl();
             tabServer = new TabPage();
@@ -31,6 +32,9 @@
             label3 = new Label();
             cboIP = new ComboBox();
             label2 = new Label();
+            change_option = new TabPage();
+            btnEnableOnline = new Button();
+            btnEnableLocal = new Button();
             rtbChatLog = new RichTextBox();
             btnLoad = new Button();
             btnSave = new Button();
@@ -49,6 +53,7 @@
             ((System.ComponentModel.ISupportInitialize)numPortServer).BeginInit();
             tabClient.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numPortClient).BeginInit();
+            change_option.SuspendLayout();
             statusStrip1.SuspendLayout();
             grpMessage.SuspendLayout();
             SuspendLayout();
@@ -79,6 +84,7 @@
             // 
             tabControl1.Controls.Add(tabServer);
             tabControl1.Controls.Add(tabClient);
+            tabControl1.Controls.Add(change_option);
             tabControl1.Location = new Point(24, 152);
             tabControl1.Margin = new Padding(4, 5, 4, 5);
             tabControl1.Name = "tabControl1";
@@ -227,6 +233,38 @@
             label2.TabIndex = 0;
             label2.Text = "Connect to Server";
             // 
+            // change_option
+            // 
+            change_option.Controls.Add(btnEnableOnline);
+            change_option.Controls.Add(btnEnableLocal);
+            change_option.Location = new Point(4, 29);
+            change_option.Name = "change_option";
+            change_option.Padding = new Padding(3);
+            change_option.Size = new Size(797, 67);
+            change_option.TabIndex = 2;
+            change_option.Text = "Change Mode";
+            change_option.UseVisualStyleBackColor = true;
+            change_option.Click += tabPage1_Click;
+            // 
+            // btnEnableOnline
+            // 
+            btnEnableOnline.Location = new Point(205, 16);
+            btnEnableOnline.Name = "btnEnableOnline";
+            btnEnableOnline.Size = new Size(104, 34);
+            btnEnableOnline.TabIndex = 1;
+            btnEnableOnline.Text = "Online";
+            btnEnableOnline.UseVisualStyleBackColor = true;
+            // 
+            // btnEnableLocal
+            // 
+            btnEnableLocal.Location = new Point(95, 16);
+            btnEnableLocal.Name = "btnEnableLocal";
+            btnEnableLocal.Size = new Size(104, 34);
+            btnEnableLocal.TabIndex = 0;
+            btnEnableLocal.Text = "Local";
+            btnEnableLocal.UseVisualStyleBackColor = true;
+            btnEnableLocal.Click += button1_Click;
+            // 
             // rtbChatLog
             // 
             rtbChatLog.Location = new Point(28, 262);
@@ -367,6 +405,7 @@
             tabClient.ResumeLayout(false);
             tabClient.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numPortClient).EndInit();
+            change_option.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             grpMessage.ResumeLayout(false);
@@ -402,5 +441,8 @@
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.PictureBox MyImage1;
+        private TabPage change_option;
+        private Button btnEnableLocal;
+        private Button btnEnableOnline;
     }
 }
