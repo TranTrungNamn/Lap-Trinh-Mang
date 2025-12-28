@@ -51,30 +51,44 @@ namespace csharpgui
 
         private void StartListening()
         {
-            try
+            // Vòng lặp để liên tục chấp nhận Client mới sau khi Client cũ ngắt kết nối
+            while (isServer)
             {
-                client = server.AcceptTcpClient();
-                UpdateStatus("Client Connected!");
-
-                // Hiển thị thông tin
-                this.Invoke(new MethodInvoker(delegate ()
+                try
                 {
-                    rtbChatLog.AppendText("[Server] Local: " + client.Client.LocalEndPoint.ToString() + "\n");
-                    rtbChatLog.AppendText("[Server] Remote: " + client.Client.RemoteEndPoint.ToString() + "\n");
-                }));
+                    // Server chờ kết nối (Code sẽ dừng tại đây cho đến khi có Client kết nối)
+                    client = server.AcceptTcpClient();
+                    UpdateStatus("Client Connected!");
 
-                NetworkStream stream = client.GetStream();
-                STR = new StreamReader(stream);
-                STW = new StreamWriter(stream);
-                STW.AutoFlush = true;
-                this.Invoke(new MethodInvoker(delegate ()
+                    // Hiển thị thông tin Client kết nối
+                    this.Invoke(new MethodInvoker(delegate ()
+                    {
+                        rtbChatLog.AppendText("[Server] New connection accepted from: " + client.Client.RemoteEndPoint.ToString() + "\n");
+                    }));
+
+                    // Thiết lập luồng đọc/ghi
+                    NetworkStream stream = client.GetStream();
+                    STR = new StreamReader(stream);
+                    STW = new StreamWriter(stream);
+                    STW.AutoFlush = true;
+
+                    // Bắt đầu nhận tin nhắn (Hàm này sẽ chạy cho đến khi Client ngắt kết nối)
+                    ReceiveMessages();
+
+                    // Khi ReceiveMessages kết thúc (Client đã ngắt kết nối), đóng socket Client để dọn dẹp
+                    client.Close();
+                }
+                catch (SocketException)
                 {
-                    rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + ": [Server] " + "\n");
-                }));
-
-                ReceiveMessages();
+                    // Lỗi này thường xảy ra khi Server bị Stop (listener đóng) -> Thoát vòng lặp
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi Server: " + ex.Message);
+                    break;
+                }
             }
-            catch { }
         }
 
         private void btnStop_Click(object sender, EventArgs e)
@@ -145,42 +159,74 @@ namespace csharpgui
         }
 
         private void btnSend_Click(object sender, EventArgs e)
-        {
-            if (txtMessage.Text != "")
-            {
-                textToSend = txtMessage.Text;
+{
+    // Kiểm tra tin nhắn rỗng
+    if (string.IsNullOrWhiteSpace(txtMessage.Text)) return;
 
-                if (STW != null)
-                {
-                    STW.WriteLine(textToSend);
-                }
+    // 1. Kiểm tra xem đã kết nối chưa
+    if (client == null || !client.Connected || STW == null)
+    {
+        MessageBox.Show("Chưa kết nối! Vui lòng kết nối trước khi gửi tin.", 
+                        "Lỗi gửi tin", 
+                        MessageBoxButtons.OK, 
+                        MessageBoxIcon.Error);
+        return;
+    }
 
-                string who = isServer ? "[Server]" : "[Client]";
-                rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textToSend + "\n");
-                txtMessage.Clear();
-            }
-        }
+    try
+    {
+        textToSend = txtMessage.Text;
+
+        // 2. Cố gắng gửi dữ liệu qua mạng
+        STW.WriteLine(textToSend);
+        
+        // 3. Chỉ cập nhật giao diện nến gửi thành công
+        string who = isServer ? "[Server]" : "[Client]";
+        rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textToSend + "\n");
+        
+        // Xóa ô nhập liệu
+        txtMessage.Clear();
+    }
+    catch (Exception ex)
+    {
+        // 4. Báo lỗi nếu có vấn đề trong quá trình truyền tin (ngắt kết nối đột ngột)
+        MessageBox.Show("Không thể gửi tin nhắn. Lỗi: " + ex.Message, 
+                        "Lỗi kết nối", 
+                        MessageBoxButtons.OK, 
+                        MessageBoxIcon.Error);
+    }
+}
 
         private void ReceiveMessages()
         {
-            while (client.Connected)
+            try
             {
-                try
+                while (client != null && client.Connected)
                 {
-                    textReceive = STR.ReadLine();
+                    textReceive = STR.ReadLine(); // Khi đóng Form, dòng này sẽ gây lỗi nếu không có try-catch
+
+                    if (textReceive == null) break; // Client ngắt kết nối
+
                     if (textReceive != "")
                     {
                         this.Invoke(new MethodInvoker(delegate ()
                         {
                             string who = isServer ? "[Client]" : "[Server]";
-                            rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textReceive + "\n");
+                            if (!rtbChatLog.IsDisposed) // Kiểm tra Form còn tồn tại không trước khi update UI
+                            {
+                                rtbChatLog.AppendText(DateTime.Now.ToShortTimeString() + " " + who + ": " + textReceive + "\n");
+                            }
                         }));
                     }
                 }
-                catch (Exception)
-                {
-                    break;
-                }
+            }
+            catch (IOException)
+            {
+                // Bỏ qua lỗi IO khi đóng kết nối
+            }
+            catch (ObjectDisposedException)
+            {
+                // Bỏ qua lỗi khi đối tượng đã bị hủy (do đóng Form)
             }
         }
 
@@ -213,13 +259,35 @@ namespace csharpgui
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            try
+            // Đặt cờ báo hiệu không còn là Server nữa để vòng lặp StartListening thoát
+            isServer = false;
+
+            // Đóng kết nối Client nếu đang mở
+            if (client != null)
             {
-                if (client != null) client.Close();
-                if (server != null) server.Stop();
+                try
+                {
+                    // Đóng stream trước để ngừng việc đọc/ghi
+                    if (STW != null) STW.Close();
+                    if (STR != null) STR.Close();
+                    client.Close();
+                }
+                catch { }
             }
-            catch { }
+
+            // Dừng Server Listener
+            if (server != null)
+            {
+                try
+                {
+                    server.Stop();
+                }
+                catch { }
+            }
+
+            // Đảm bảo đóng ứng dụng hoàn toàn
             Application.Exit();
+            Environment.Exit(0); // Bắt buộc dừng toàn bộ tiến trình (bao gồm background threads)
         }
 
         private void UpdateStatus(string status)
